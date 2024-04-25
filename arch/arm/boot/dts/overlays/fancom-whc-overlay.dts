@@ -1,0 +1,151 @@
+/*
+ * Nobleo Technology
+ */
+
+/dts-v1/;
+/plugin/;
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/bcm2835.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/clock/bcm2835.h>
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
+
+#include "cma-overlay.dts"
+
+/ {
+	compatible = "raspberrypi,4-compute-module", "brcm,bcm2835", "brcm,bcm2711";
+
+	fragment@0 {
+		target = <&gpio>;
+		__overlay__ {
+			i2c1_pins: i2c1 {
+				brcm,pins = <44 45>;
+				brcm,function = <BCM2835_FSEL_ALT2>;
+				brcm,pull = <BCM2835_PUD_UP>;
+			};
+
+			key_gpio: key_gpio {
+				brcm,pins = <7 8>;
+				brcm,function = <BCM2835_FSEL_GPIO_IN>;
+				brcm,pull = <BCM2835_PUD_UP>;
+			};
+		};
+	};
+
+	fragment@1 { /* Debug port */
+		target = <&uart1_pins>;
+		__overlay__ {
+			brcm,pins = <14 15>; /* pin 51, 55 */
+			brcm,function = <BCM2835_FSEL_ALT0>;
+			brcm,pull = <0 2>;
+		};
+	};
+
+	fragment@2 { /* Debug port */
+		target = <&uart1>;
+		__overlay__ {
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart1_pins>;
+		};
+	};
+
+	/* Fixes because RPI does stupid stuff. */
+	fragment@3 {
+		target = <&phy1>;
+		__overlay__ {
+			reg = <0>;
+		};
+	};
+
+	fragment@4 {
+		target = <&i2c1>;
+		__overlay__ {
+			#gpio-cells = <2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c1_pins>;
+			clock-frequency = <400000>;
+
+			pcf8523@68 {
+				compatible = "nxp,pcf8523";
+				reg = <0x68>;
+				/* quartz-load-femtofarads in femto Farad (fF)
+				 *
+				 * Actual is 6000fF, driver accepts min/max of 7000/12500
+				 */
+				quartz-load-femtofarads = <7000>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <&i2c0if>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@6 {
+		target = <&i2c0mux>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@8 {
+		target = <&pcie0>;
+		__overlay__ {
+			status = "okay";
+			compatible = "brcm,bcm2711-pcie", "brcm,bcm7445-pcie";
+			max-link-speed = <2>;
+
+			pci@1,0 {
+				status = "okay";
+				/delete-node/ usb@1,0;
+			};
+		};
+	};
+
+	fragment@9 {
+		target-path = "/";
+		__overlay__ {
+			leds_rgb {
+				compatible = "gpio-leds"; /* See leds-gpio.yaml */
+				led_red {
+					gpios = <&gpio 24 GPIO_ACTIVE_LOW>; /* pin 45 */
+					color = <LED_COLOR_ID_RED>;
+					default-state = "off";
+				};
+
+
+				led_green {
+					gpios = <&gpio 22 GPIO_ACTIVE_LOW>; /* pin 46 */
+					color = <LED_COLOR_ID_GREEN>;
+					default-state = "off";
+				};
+
+				led_blue {
+					gpios = <&gpio 23 GPIO_ACTIVE_LOW>; /* pin 47 */
+					color = <LED_COLOR_ID_BLUE>;
+					default-state = "off";
+				};
+			};
+		};
+	};
+
+	fragment@10 {
+		target = <&spi0>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+};
+
+

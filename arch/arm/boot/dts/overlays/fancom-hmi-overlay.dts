@@ -1,0 +1,299 @@
+/*
+ * vc4-kms-dsi-sn65dsi8x-overlay.dts
+ */
+
+/dts-v1/;
+/plugin/;
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/bcm2835.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/clock/bcm2835.h>
+
+#include "cma-overlay.dts"
+
+/ {
+	compatible = "brcm,bcm2835";
+
+	/* PWM0 function */
+	fragment@0 {
+		target = <&gpio>;
+		__overlay__ {
+			pwm_pins: pwm_pins {
+				brcm,pins = <18>; /* pin 49 */
+				brcm,function = <BCM2835_FSEL_ALT5>;
+			};
+
+			dsi_lvds_en: dsi_lvds_en {
+				brcm,pins = <11>;
+				brcm,function = <BCM2835_FSEL_GPIO_OUT>;
+			};
+
+			i2c1_pins: i2c1 {
+				brcm,pins = <44 45>;
+				brcm,function = <BCM2835_FSEL_ALT2>;
+				brcm,pull = <BCM2835_PUD_UP>;
+			};
+
+			backlight_en: backlight_en {
+				brcm,pins = <17>; /* pin 50 */
+				brcm,function = <BCM2835_FSEL_GPIO_OUT>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&pwm>;
+		frag1: __overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pwm_pins>;
+			assigned-clock-rates = <100000000>;
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			backlight_lvds: backlight {
+				compatible = "pwm-backlight";
+				pwms = <&pwm 0 5000000>; /* 200Hz */
+				brightness-levels = <0 1000>;
+				num-interpolated-steps = <1000>;
+				default-brightness-level = <800>;
+				enable-gpios = <&gpio 17 GPIO_ACTIVE_HIGH>;
+
+				power-supply = <&vdd_3v3_reg>;
+				status = "okay";
+			};
+
+			panel: panel {
+				compatible = "panel-lvds";
+				status = "okay";
+
+				backlight = <&backlight_lvds>;
+				power-supply = <&vdd_3v3_reg>;
+
+				width-mm = <344>;
+				height-mm = <194>;
+
+				data-mapping = "vesa-24";
+
+				panel-timing {
+					/* clock frequency of 70.93Mhz in the datasheet is for single LVDS channel */
+					/* since we use dual LVDS channel, the clock frequency is 2*70.93Mhz */
+					/* the bridge driver will correct this */
+					/* vc4_dsi.c: however, the dsi parent_rate is 3Ghz and the dsi-divider is fixed to (24/#nr-data lanes) */
+					/* (3Ghz / 3)/7 = 142.86Mhz. (142.86Mhz * 24bpp) / 8 = 571Mhz DSI clock */
+					/* (3Ghz / 4)/7 = 107.14Mhz. (107.14Mhz * 24bpp) / 8 = 428.57Mhz DSI clock */
+					/* minimum required DSI clock is (48bits/(3 lanes * 2)) * 60Mhz = 480Mhz
+					/* we'll hence need a 571Mhz capped to 500Mhz DSI clock, with a divider of 8 in the bridge, resulting in 62.5Mhz */
+					/* 62.5Mhz * 2 = 125Mhz */
+					clock-frequency = <125000000>;
+
+					/* the hactive and porches in the datasheet are for a single LVDS channel */
+					/* since we use dual LVDS channel, double everything */
+					hactive = <1920>;
+					hsync-len = <60>;
+					hfront-porch = <60>;
+					hback-porch = <60>;
+
+					vactive = <1080>;
+					vsync-len = <4>;
+					vfront-porch = <3>;
+					vback-porch = <3>;
+
+					hsync-active = <0>;
+					vsync-active = <0>;
+					de-active = <1>;
+					pixelclk-active = <1>;
+				};
+
+				ports {
+					port@0 {
+						reg = <0>;
+						dual-lvds-odd-pixels;
+						panel_in_lvds_channelA: endpoint {
+							remote-endpoint = <&bridge_out_channelA>;
+						};
+					};
+
+					port@1 {
+						reg = <1>;
+						dual-lvds-even-pixels;
+						panel_in_lvds_channelB: endpoint {
+							remote-endpoint = <&bridge_out_channelB>;
+						};
+					};
+				};
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&i2c1>;
+		__overlay__ {
+			#gpio-cells = <2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c1_pins>;
+			clock-frequency = <400000>;
+
+			sn65dsi84@2c {
+				compatible = "ti,sn65dsi84";
+				reg = <0x2c>;
+				enable-gpios = <&gpio 11 GPIO_ACTIVE_HIGH>;
+
+				pinctrl-names = "default";
+				pinctrl-0 = <&dsi_lvds_en>;
+				status = "okay";
+
+				interrupts = <36 IRQ_TYPE_LEVEL_HIGH>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+						bridge_in: endpoint {
+							remote-endpoint = <&dsi_out_port>;
+							data-lanes = <0 1 2>;
+						};
+					};
+
+					port@2 {
+						reg = <2>;
+						bridge_out_channelA: endpoint {
+							remote-endpoint = <&panel_in_lvds_channelA>;
+						};
+					};
+
+					port@3 {
+						reg = <3>;
+						bridge_out_channelB: endpoint {
+							remote-endpoint = <&panel_in_lvds_channelB>;
+						};
+					};
+				};
+			};
+		};
+	};
+
+	fragment@4 {
+		target = <&dsi1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+			port {
+				dsi_out_port: endpoint {
+					remote-endpoint = <&bridge_in>;
+					data-lanes = <0 1 2>;
+				};
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <&i2c0if>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+		
+	fragment@6 {
+		target = <&i2c0mux>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@20 {
+		target = <&vc4>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+	fragment@21 {
+		target = <&hvs>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+	fragment@22 {
+		target = <&v3d>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+	fragment@23 {
+		target = <&clocks>;
+		__overlay__ {
+			claim-clocks = <
+				BCM2835_PLLD_DSI0
+				BCM2835_PLLD_DSI1
+				BCM2835_PLLH_AUX
+				BCM2835_PLLH_PIX
+			>;
+		};
+	};
+
+	fragment@24 {
+		target = <&vec>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@25 {
+		target = <&txp>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@26 {
+		target = <&pixelvalve0>;
+		__overlay__  {
+			status = "okay";
+		};
+	};
+
+	fragment@27 {
+		target = <&pixelvalve1>;
+		__overlay__  {
+			status = "okay";
+		};
+	};
+
+	fragment@28 {
+		target = <&pixelvalve2>;
+		__overlay__  {
+			status = "okay";
+		};
+	};
+
+	fragment@29 {
+		target = <&pixelvalve3>;
+		__overlay__  {
+			status = "okay";
+		};
+	};
+
+	fragment@30 {
+		target = <&pixelvalve4>;
+		__overlay__  {
+			status = "okay";
+		};
+	};
+
+	fragment@31 {
+		target = <&fb>;
+		__overlay__  {
+			status = "okay";
+		};
+	};
+};
