@@ -211,25 +211,25 @@
 		};
 	};
 
-	fragment@20 {
+	fragment@7 {
 		target = <&vc4>;
 		__overlay__ {
 			status = "okay";
 		};
 	};
-	fragment@21 {
+	fragment@8 {
 		target = <&hvs>;
 		__overlay__ {
 			status = "okay";
 		};
 	};
-	fragment@22 {
+	fragment@9 {
 		target = <&v3d>;
 		__overlay__ {
 			status = "okay";
 		};
 	};
-	fragment@23 {
+	fragment@10 {
 		target = <&clocks>;
 		__overlay__ {
 			claim-clocks = <
@@ -241,56 +241,56 @@
 		};
 	};
 
-	fragment@24 {
+	fragment@11 {
 		target = <&vec>;
 		__overlay__ {
 			status = "okay";
 		};
 	};
 
-	fragment@25 {
+	fragment@12 {
 		target = <&txp>;
 		__overlay__ {
 			status = "okay";
 		};
 	};
 
-	fragment@26 {
+	fragment@13 {
 		target = <&pixelvalve0>;
 		__overlay__  {
 			status = "okay";
 		};
 	};
 
-	fragment@27 {
+	fragment@14 {
 		target = <&pixelvalve1>;
 		__overlay__  {
 			status = "okay";
 		};
 	};
 
-	fragment@28 {
+	fragment@15 {
 		target = <&pixelvalve2>;
 		__overlay__  {
 			status = "okay";
 		};
 	};
 
-	fragment@29 {
+	fragment@16 {
 		target = <&pixelvalve3>;
 		__overlay__  {
 			status = "okay";
 		};
 	};
 
-	fragment@30 {
+	fragment@17 {
 		target = <&pixelvalve4>;
 		__overlay__  {
 			status = "okay";
 		};
 	};
 
-	fragment@31 {
+	fragment@18 {
 		target = <&fb>;
 		__overlay__  {
 			status = "okay";
