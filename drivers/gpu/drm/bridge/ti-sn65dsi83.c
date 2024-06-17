@@ -24,7 +24,9 @@
  * Valentin Raevsky <valentin@compulab.co.il>
  * Philippe Schenker <philippe.schenker@toradex.com>
  */
-
+#define VERBOSE
+#define HARDCODED_REGS
+#define SN65DSI83_TEST_PATTERN
 #include <linux/bits.h>
 #include <linux/clk.h>
 #include <linux/gpio/consumer.h>
@@ -466,7 +468,11 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 		     mode->hsync_start - mode->hdisplay);
 	regmap_write(ctx->regmap, REG_VID_CHA_VERTICAL_FRONT_PORCH,
 		     mode->vsync_start - mode->vdisplay);
+#ifndef SN65DSI83_TEST_PATTERN
 	regmap_write(ctx->regmap, REG_VID_CHA_TEST_PATTERN, 0x00);
+#else
+	regmap_write(ctx->regmap, REG_VID_CHA_TEST_PATTERN, 0x10);
+#endif
 
 	/* Enable PLL */
 	regmap_write(ctx->regmap, REG_RC_PLL_EN, REG_RC_PLL_EN_PLL_EN);
