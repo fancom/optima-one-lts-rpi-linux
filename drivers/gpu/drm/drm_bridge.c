@@ -25,6 +25,7 @@
 #include <linux/media-bus-format.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
+#include <linux/list.h>
 
 #include <drm/drm_atomic_state_helper.h>
 #include <drm/drm_bridge.h>
@@ -210,6 +211,7 @@ void drm_bridge_add(struct drm_bridge *bridge)
 	mutex_lock(&bridge_lock);
 	list_add_tail(&bridge->list, &bridge_list);
 	mutex_unlock(&bridge_lock);
+	printk(KERN_ERR "DSI_BRIDGE: %s: add list\n", __func__);
 }
 EXPORT_SYMBOL(drm_bridge_add);
 
@@ -1375,17 +1377,20 @@ EXPORT_SYMBOL_GPL(drm_bridge_hpd_notify);
 struct drm_bridge *of_drm_find_bridge(struct device_node *np)
 {
 	struct drm_bridge *bridge;
-
 	mutex_lock(&bridge_lock);
 
+	if (list_empty(&bridge_list)) {
+        	pr_info("The bridge_list is empty\n");
+        }
 	list_for_each_entry(bridge, &bridge_list, list) {
 		if (bridge->of_node == np) {
+			pr_info("Match found: %p\n", bridge);
 			mutex_unlock(&bridge_lock);
 			return bridge;
 		}
 	}
-
 	mutex_unlock(&bridge_lock);
+	pr_info("No match found for node: %p\n", np);
 	return NULL;
 }
 EXPORT_SYMBOL(of_drm_find_bridge);

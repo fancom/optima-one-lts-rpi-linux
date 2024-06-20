@@ -167,17 +167,18 @@ static int panel_lvds_probe(struct platform_device *pdev)
 	lvds = devm_kzalloc(&pdev->dev, sizeof(*lvds), GFP_KERNEL);
 	if (!lvds)
 		return -ENOMEM;
-
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1 \n", __func__);
 	lvds->dev = &pdev->dev;
 
 	ret = panel_lvds_parse_dt(lvds);
 	if (ret < 0)
 		return ret;
-
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2 ret=%d\n", __func__,ret);
 	lvds->supply = devm_regulator_get_optional(lvds->dev, "power");
+	printk(KERN_ERR "DSI_BRIDGE: %s: 3 ret=%d\n", __func__,ret);
 	if (IS_ERR(lvds->supply)) {
 		ret = PTR_ERR(lvds->supply);
-
+		printk(KERN_ERR "DSI_BRIDGE: %s: 4 ret=%d\n", __func__,ret);
 		if (ret != -ENODEV) {
 			if (ret != -EPROBE_DEFER)
 				dev_err(lvds->dev, "failed to request regulator: %d\n",
@@ -191,8 +192,10 @@ static int panel_lvds_probe(struct platform_device *pdev)
 	/* Get GPIOs and backlight controller. */
 	lvds->enable_gpio = devm_gpiod_get_optional(lvds->dev, "enable",
 						     GPIOD_OUT_LOW);
+	printk(KERN_ERR "DSI_BRIDGE: %s: 5 enabled gpio\n", __func__);						     
 	if (IS_ERR(lvds->enable_gpio)) {
 		ret = PTR_ERR(lvds->enable_gpio);
+		printk(KERN_ERR "DSI_BRIDGE: %s: 6 ret=%d\n", __func__,ret);
 		dev_err(lvds->dev, "failed to request %s GPIO: %d\n",
 			"enable", ret);
 		return ret;
@@ -200,8 +203,10 @@ static int panel_lvds_probe(struct platform_device *pdev)
 
 	lvds->reset_gpio = devm_gpiod_get_optional(lvds->dev, "reset",
 						     GPIOD_OUT_HIGH);
+	printk(KERN_ERR "DSI_BRIDGE: %s: 7 reseted gpio\n", __func__);						     
 	if (IS_ERR(lvds->reset_gpio)) {
 		ret = PTR_ERR(lvds->reset_gpio);
+		printk(KERN_ERR "DSI_BRIDGE: %s: 8 ret=%d\n", __func__,ret);
 		dev_err(lvds->dev, "failed to request %s GPIO: %d\n",
 			"reset", ret);
 		return ret;
@@ -217,14 +222,15 @@ static int panel_lvds_probe(struct platform_device *pdev)
 	/* Register the panel. */
 	drm_panel_init(&lvds->panel, lvds->dev, &panel_lvds_funcs,
 		       DRM_MODE_CONNECTOR_LVDS);
-
+	printk(KERN_ERR "DSI_BRIDGE: 6 panel registered\n", __func__);
 	ret = drm_panel_of_backlight(&lvds->panel);
 	if (ret)
 		return ret;
 
 	drm_panel_add(&lvds->panel);
-
+	printk(KERN_ERR "DSI_BRIDGE: 7 panel added\n", __func__);
 	dev_set_drvdata(lvds->dev, lvds);
+	printk(KERN_ERR "DSI_BRIDGE: 8 return\n", __func__);
 	return 0;
 }
 

@@ -5,6 +5,8 @@
 #include <linux/media-bus-format.h>
 #include <linux/of.h>
 #include <linux/of_graph.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
 
 #include <drm/drm_bridge.h>
 #include <drm/drm_crtc.h>
@@ -246,7 +248,7 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 		return -EINVAL;
 	if (panel)
 		*panel = NULL;
-
+        dump_stack();
 	/*
 	 * of_graph_get_remote_node() produces a noisy error message if port
 	 * node isn't found and the absence of the port is a legit case here,
@@ -254,18 +256,28 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 	 * device-tree node.
 	 */
 	if (!of_graph_is_present(np))
+	{
+	        printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
 		return -ENODEV;
+	}
 
 	remote = of_graph_get_remote_node(np, port, endpoint);
 	if (!remote)
+	{
+                printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
 		return -ENODEV;
+	}
 
 	if (panel) {
 		*panel = of_drm_find_panel(remote);
 		if (!IS_ERR(*panel))
-			ret = 0;
+		{	ret = 0;printk(KERN_ERR "DSI_BRIDGE: %s: 3, ret=%d\n", __func__,ret);}
 		else
-			*panel = NULL;
+		{	*panel = NULL;printk(KERN_ERR "DSI_BRIDGE: %s 4\n", __func__);}
+	}
+	else
+	{
+	        printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
 	}
 
 	/* No panel found yet, check for a bridge next. */
@@ -273,14 +285,28 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 		if (ret) {
 			*bridge = of_drm_find_bridge(remote);
 			if (*bridge)
-				ret = 0;
-		} else {
+			{	
+			       ret = 0;
+			       printk(KERN_ERR "DSI_BRIDGE: %s: 6, ret=%d\n", __func__,ret);
+			}
+			else{
+			       printk(KERN_ERR "DSI_BRIDGE: %s: 7\n", __func__);
+			}
+		} 
+		else {
 			*bridge = NULL;
+			ret = 0;
+			printk(KERN_ERR "DSI_BRIDGE: %s: 8, ret=%d\n", __func__,ret);
 		}
 
 	}
+	else
+	{
+                printk(KERN_ERR "DSI_BRIDGE: %s: 9\n", __func__);
+	}
 
 	of_node_put(remote);
+	printk(KERN_ERR "DSI_BRIDGE: %s: 10 ret=%d\n", __func__,ret);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(drm_of_find_panel_or_bridge);
