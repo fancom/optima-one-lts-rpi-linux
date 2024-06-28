@@ -1,3 +1,8 @@
+//#define MODE_HACK
+#define VERBOSE
+#define HARDCODED_REGS
+#define SN65DSI83_TEST_PATTERN
+
 // SPDX-License-Identifier: GPL-2.0
 /*
  * TI SN65DSI83,84,85 driver
@@ -24,9 +29,7 @@
  * Valentin Raevsky <valentin@compulab.co.il>
  * Philippe Schenker <philippe.schenker@toradex.com>
  */
-#define VERBOSE
-#define HARDCODED_REGS
-#define SN65DSI83_TEST_PATTERN
+
 #include <linux/bits.h>
 #include <linux/clk.h>
 #include <linux/gpio/consumer.h>
@@ -239,6 +242,73 @@ static const struct regmap_config sn65dsi83_regmap_config = {
 	.max_register = REG_IRQ_STAT,
 };
 
+static const struct reg_default sn65dsi65_reg_defaults[] = {
+	/* Reset */
+	{0x09, 0x00},
+
+	/* Core */
+	{0x0A, 0x05},//ok
+	{0x0B, 0x38},//ok
+	{0x0D, 0x00},//ok
+	{0x10, 0x28},//ok
+	{0x11, 0x00},//ok
+	{0x12, 0x64},//ok
+	{0x13, 0x00},//ok
+	{0x18, 0x6C},//ok
+	{0x19, 0x0F},//ok
+	{0x1A, 0x20},//ok
+	{0x1B, 0x00},//ok
+
+	/* Channel A */
+	{0x20, 0x80},//ok
+	{0x21, 0x07},//ok
+	{0x24, 0x38},//ok
+	{0x25, 0x04},//ok
+	{0x28, 0x21},//ok
+	{0x29, 0x00},//ok
+	{0x2C, 0x1E},//ok
+	{0x2D, 0x00},//ok
+	{0x30, 0x04},//ok
+	{0x31, 0x00},//ok
+	{0x34, 0x1E},//ok
+	{0x36, 0x03},//ok
+	{0x38, 0x1E},//ok
+	{0x3A, 0x03},//ok
+
+	/* Channel B */
+	{0x22, 0x00},//ok
+	{0x23, 0x00},//ok
+	{0x26, 0x00},//ok
+	{0x27, 0x00},//ok
+	{0x2A, 0x00},//ok
+	{0x2B, 0x00},//ok
+	{0x2E, 0x00},//ok
+	{0x2F, 0x00},//ok
+	{0x32, 0x00},//ok
+	{0x33, 0x00},//ok
+	{0x35, 0x00},//ok
+	{0x37, 0x00},//ok
+	{0x39, 0x00},//ok
+	{0x3B, 0x00},//ok
+
+	/* other settings */
+	{0x3D, 0x00},//ok
+	{0x3E, 0x00},//ok
+
+	/* interrupts */
+	{0xE0, 0x00},
+	{0xE1, 0x00},
+	{0xE2, 0x00},
+	{0xE5, 0x00},
+	{0xE6, 0x00},
+#ifdef SN65DSI83_TEST_PATTERN
+	/* Test */
+	{0x3C, 0x10},
+#else
+	{0x3C, 0x00},
+#endif
+};
+
 static struct sn65dsi83 *bridge_to_sn65dsi83(struct drm_bridge *bridge)
 {
 	return container_of(bridge, struct sn65dsi83, bridge);
@@ -326,6 +396,9 @@ static u8 sn65dsi83_get_dsi_div(struct sn65dsi83 *ctx)
 static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 					struct drm_bridge_state *old_bridge_state)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	struct sn65dsi83 *ctx = bridge_to_sn65dsi83(bridge);
 	struct drm_atomic_state *state = old_bridge_state->base.state;
 	const struct drm_bridge_state *bridge_state;
@@ -345,11 +418,15 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 		dev_err(ctx->dev, "Failed to enable vcc: %d\n", ret);
 		return;
 	}
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+#endif
 	/* Deassert reset */
 	gpiod_set_value_cansleep(ctx->enable_gpio, 1);
 	usleep_range(10000, 11000);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+#endif
 	/* Get the LVDS format from the bridge state. */
 	bridge_state = drm_atomic_get_new_bridge_state(state, bridge);
 
@@ -357,14 +434,23 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 	case MEDIA_BUS_FMT_RGB666_1X7X3_SPWG:
 		lvds_format_24bpp = false;
 		lvds_format_jeida = true;
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 4\n", __func__);
+#endif
 		break;
 	case MEDIA_BUS_FMT_RGB888_1X7X4_JEIDA:
 		lvds_format_24bpp = true;
 		lvds_format_jeida = true;
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
+#endif
 		break;
 	case MEDIA_BUS_FMT_RGB888_1X7X4_SPWG:
 		lvds_format_24bpp = true;
 		lvds_format_jeida = false;
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 6\n", __func__);
+#endif
 		break;
 	default:
 		/*
@@ -377,6 +463,9 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 		dev_warn(ctx->dev,
 			 "Unsupported LVDS bus format 0x%04x, please check output bridge driver. Falling back to SPWG24.\n",
 			 bridge_state->output_bus_cfg.format);
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 7\n", __func__);
+#endif
 		break;
 	}
 
@@ -389,7 +478,9 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 	crtc = drm_atomic_get_new_connector_state(state, connector)->crtc;
 	crtc_state = drm_atomic_get_new_crtc_state(state, crtc);
 	mode = &crtc_state->adjusted_mode;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 8\n", __func__);
+#endif
 	/* Clear reset, disable PLL */
 	regmap_write(ctx->regmap, REG_RC_RESET, 0x00);
 	regmap_write(ctx->regmap, REG_RC_PLL_EN, 0x00);
@@ -402,7 +493,9 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 		     REG_DSI_CLK_CHA_DSI_CLK_RANGE(sn65dsi83_get_dsi_range(ctx, mode)));
 	regmap_write(ctx->regmap, REG_RC_DSI_CLK,
 		     REG_RC_DSI_CLK_DSI_CLK_DIVIDER(sn65dsi83_get_dsi_div(ctx)));
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 9\n", __func__);
+#endif
 	/* Set number of DSI lanes and LVDS link config. */
 	regmap_write(ctx->regmap, REG_DSI_LANE,
 		     REG_DSI_LANE_DSI_CHANNEL_MODE_SINGLE |
@@ -411,7 +504,9 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 		     REG_DSI_LANE_CHB_DSI_LANES(3));
 	/* No equalization. */
 	regmap_write(ctx->regmap, REG_DSI_EQ, 0x00);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 10\n", __func__);
+#endif
 	/* Set up sync signal polarity. */
 	val = (mode->flags & DRM_MODE_FLAG_NHSYNC ?
 	       REG_LVDS_FMT_HS_NEG_POLARITY : 0) |
@@ -431,7 +526,9 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 		if (ctx->lvds_dual_link)
 			val |= REG_LVDS_FMT_CHB_24BPP_FORMAT1;
 	}
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 11\n", __func__);
+#endif
 	/* Set up LVDS output config (DSI84,DSI85) */
 	if (!ctx->lvds_dual_link)
 		val |= REG_LVDS_FMT_LVDS_LINK_CFG;
@@ -444,7 +541,9 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 		     REG_LVDS_LANE_CHA_LVDS_TERM |
 		     REG_LVDS_LANE_CHB_LVDS_TERM);
 	regmap_write(ctx->regmap, REG_LVDS_CM, 0x00);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 12\n", __func__);
+#endif
 	le16val = cpu_to_le16(mode->hdisplay);
 	regmap_bulk_write(ctx->regmap, REG_VID_CHA_ACTIVE_LINE_LENGTH_LOW,
 			  &le16val, 2);
@@ -469,9 +568,30 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 	regmap_write(ctx->regmap, REG_VID_CHA_VERTICAL_FRONT_PORCH,
 		     mode->vsync_start - mode->vdisplay);
 #ifndef SN65DSI83_TEST_PATTERN
+	#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 13\n", __func__);
+	#endif
 	regmap_write(ctx->regmap, REG_VID_CHA_TEST_PATTERN, 0x00);
 #else
+	#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 14\n", __func__);
+	#endif
 	regmap_write(ctx->regmap, REG_VID_CHA_TEST_PATTERN, 0x10);
+#endif
+
+#ifdef HARDCODED_REGS
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: sn65dsi65_reg_defaults\n", __func__);
+#endif
+	int i;
+	for (i = 0; i < ARRAY_SIZE(sn65dsi65_reg_defaults); i++) {
+		struct reg_default conf = sn65dsi65_reg_defaults[i];
+		regmap_write(ctx->regmap, conf.reg, conf.def);
+	}
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: written %d sn65dsi65_reg_defaults\n",
+	       __func__, i);
+#endif
 #endif
 
 	/* Enable PLL */
@@ -585,6 +705,9 @@ static const struct drm_bridge_funcs sn65dsi83_funcs = {
 
 static int sn65dsi83_parse_dt(struct sn65dsi83 *ctx, enum sn65dsi83_model model)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	struct drm_bridge *panel_bridge;
 	struct device *dev = ctx->dev;
 
@@ -611,17 +734,24 @@ static int sn65dsi83_parse_dt(struct sn65dsi83 *ctx, enum sn65dsi83_model model)
 		}
 	}
 
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+#endif
 	panel_bridge = devm_drm_of_get_bridge(dev, dev->of_node, 2, 0);
 	if (IS_ERR(panel_bridge))
 		return PTR_ERR(panel_bridge);
 
 	ctx->panel_bridge = panel_bridge;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+#endif
 	ctx->vcc = devm_regulator_get(dev, "vcc");
 	if (IS_ERR(ctx->vcc))
 		return dev_err_probe(dev, PTR_ERR(ctx->vcc),
 				     "Failed to get supply 'vcc'\n");
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 4\n", __func__);
+#endif
 	return 0;
 }
 
@@ -676,6 +806,9 @@ static int sn65dsi83_host_attach(struct sn65dsi83 *ctx)
 
 static int sn65dsi83_probe(struct i2c_client *client)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1 6\n", __func__);
+#endif
 	const struct i2c_device_id *id = i2c_client_get_device_id(client);
 	struct device *dev = &client->dev;
 	enum sn65dsi83_model model;
@@ -703,23 +836,39 @@ static int sn65dsi83_probe(struct i2c_client *client)
 
 	usleep_range(10000, 11000);
 
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+#endif
+
 	ret = sn65dsi83_parse_dt(ctx, model);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s:  3 ret=%d\n", __func__,ret);
+#endif
 	if (ret)
 		return ret;
-
 	ctx->regmap = devm_regmap_init_i2c(client, &sn65dsi83_regmap_config);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s:  4\n", __func__);
+#endif
 	if (IS_ERR(ctx->regmap))
 		return dev_err_probe(dev, PTR_ERR(ctx->regmap), "failed to get regmap\n");
 
 	dev_set_drvdata(dev, ctx);
 	i2c_set_clientdata(client, ctx);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
+#endif
 	ctx->bridge.funcs = &sn65dsi83_funcs;
 	ctx->bridge.of_node = dev->of_node;
 	ctx->bridge.pre_enable_prev_first = true;
 	drm_bridge_add(&ctx->bridge);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 6\n", __func__);
+#endif
 	ret = sn65dsi83_host_attach(ctx);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 7 ret=%d\n", __func__,ret);
+#endif
 	if (ret) {
 		dev_err_probe(dev, ret, "failed to attach DSI host\n");
 		goto err_remove_bridge;

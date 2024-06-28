@@ -20,7 +20,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-
+#define VERBOSE
 #include <linux/backlight.h>
 #include <linux/err.h>
 #include <linux/module.h>
@@ -57,6 +57,9 @@ static LIST_HEAD(panel_list);
 void drm_panel_init(struct drm_panel *panel, struct device *dev,
 		    const struct drm_panel_funcs *funcs, int connector_type)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1 name=%s\n", __func__,panel->dev->init_name);
+#endif
 	INIT_LIST_HEAD(&panel->list);
 	INIT_LIST_HEAD(&panel->followers);
 	mutex_init(&panel->follower_lock);
@@ -75,6 +78,9 @@ EXPORT_SYMBOL(drm_panel_init);
  */
 void drm_panel_add(struct drm_panel *panel)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1 name-%s\n", __func__,panel->dev->init_name);
+#endif
 	mutex_lock(&panel_lock);
 	list_add_tail(&panel->list, &panel_list);
 	mutex_unlock(&panel_lock);
@@ -314,21 +320,35 @@ EXPORT_SYMBOL(drm_panel_get_modes);
  */
 struct drm_panel *of_drm_find_panel(const struct device_node *np)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	struct drm_panel *panel;
 
 	if (!of_device_is_available(np))
 		return ERR_PTR(-ENODEV);
-
+		
 	mutex_lock(&panel_lock);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2, np=%s\n", __func__,np->name);
+	if (list_empty(&panel_list))
+        	printk(KERN_INFO "The panel list is empty.\n");
+#endif
 
 	list_for_each_entry(panel, &panel_list, list) {
 		if (panel->dev->of_node == np) {
 			mutex_unlock(&panel_lock);
+#ifdef VERBOSE
+			printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+#endif
 			return panel;
 		}
 	}
 
 	mutex_unlock(&panel_lock);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 4\n", __func__);
+#endif
 	return ERR_PTR(-EPROBE_DEFER);
 }
 EXPORT_SYMBOL(of_drm_find_panel);
@@ -350,14 +370,18 @@ int of_drm_get_panel_orientation(const struct device_node *np,
 				 enum drm_panel_orientation *orientation)
 {
 	int rotation, ret;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1 name=%s\n", __func__,np->name);
+#endif
 	ret = of_property_read_u32(np, "rotation", &rotation);
 	if (ret == -EINVAL) {
 		/* Don't return an error if there's no rotation property. */
 		*orientation = DRM_MODE_PANEL_ORIENTATION_UNKNOWN;
 		return 0;
 	}
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2 ret=%d, rotation=%d\n", __func__,ret,rotation);
+#endif
 	if (ret < 0)
 		return ret;
 
@@ -422,19 +446,27 @@ EXPORT_SYMBOL(drm_is_panel_follower);
 int drm_panel_add_follower(struct device *follower_dev,
 			   struct drm_panel_follower *follower)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	struct device_node *panel_np;
 	struct drm_panel *panel;
 	int ret;
 
 	panel_np = of_parse_phandle(follower_dev->of_node, "panel", 0);
+	
 	if (!panel_np)
 		return -ENODEV;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2 panel=%s\n", __func__,panel_np->name);
+#endif
 	panel = of_drm_find_panel(panel_np);
 	of_node_put(panel_np);
 	if (IS_ERR(panel))
 		return PTR_ERR(panel);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+#endif
 	get_device(panel->dev);
 	follower->panel = panel;
 
@@ -449,7 +481,9 @@ int drm_panel_add_follower(struct device *follower_dev,
 	}
 
 	mutex_unlock(&panel->follower_lock);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 4\n", __func__);
+#endif
 	return 0;
 }
 EXPORT_SYMBOL(drm_panel_add_follower);
