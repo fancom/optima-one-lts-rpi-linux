@@ -18,7 +18,7 @@
  *  Reconsolidated from arch/x/kernel/prom.c by Stephen Rothwell and
  *  Grant Likely.
  */
-
+#define VERBOSE
 #define pr_fmt(fmt)	"OF: " fmt
 
 #include <linux/of.h>
@@ -40,6 +40,9 @@
  */
 bool of_graph_is_present(const struct device_node *node)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	struct device_node *ports, *port;
 
 	ports = of_get_child_by_name(node, "ports");
@@ -837,12 +840,18 @@ EXPORT_SYMBOL(of_graph_get_endpoint_count);
 struct device_node *of_graph_get_remote_node(const struct device_node *node,
 					     u32 port, u32 endpoint)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	struct device_node *endpoint_node, *remote;
 
 	endpoint_node = of_graph_get_endpoint_by_regs(node, port, endpoint);
 	if (!endpoint_node) {
 		pr_debug("no valid endpoint (%d, %d) for node %pOF\n",
 			 port, endpoint, node);
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+#endif
 		return NULL;
 	}
 
@@ -850,15 +859,23 @@ struct device_node *of_graph_get_remote_node(const struct device_node *node,
 	of_node_put(endpoint_node);
 	if (!remote) {
 		pr_debug("no valid remote node\n");
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+#endif
 		return NULL;
 	}
 
 	if (!of_device_is_available(remote)) {
 		pr_debug("not available for remote node\n");
 		of_node_put(remote);
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 4\n", __func__);
+#endif
 		return NULL;
 	}
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
+#endif
 	return remote;
 }
 EXPORT_SYMBOL(of_graph_get_remote_node);

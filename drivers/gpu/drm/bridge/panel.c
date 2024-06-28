@@ -3,7 +3,7 @@
  * Copyright (C) 2016 Laurent Pinchart <laurent.pinchart@ideasonboard.com>
  * Copyright (C) 2017 Broadcom
  */
-
+#define VERBOSE
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_bridge.h>
 #include <drm/drm_connector.h>
@@ -503,18 +503,26 @@ struct drm_bridge *devm_drm_of_get_bridge(struct device *dev,
 					  struct device_node *np,
 					  u32 port, u32 endpoint)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	struct drm_bridge *bridge;
 	struct drm_panel *panel;
 	int ret;
 
 	ret = drm_of_find_panel_or_bridge(np, port, endpoint,
 					  &panel, &bridge);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2 ret=%d\n", __func__,ret);
+#endif
 	if (ret)
 		return ERR_PTR(ret);
 
 	if (panel)
 		bridge = devm_drm_panel_bridge_add(dev, panel);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+#endif
 	return bridge;
 }
 EXPORT_SYMBOL(devm_drm_of_get_bridge);

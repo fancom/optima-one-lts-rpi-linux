@@ -7,7 +7,7 @@
  *
  * Contact: Laurent Pinchart (laurent.pinchart@ideasonboard.com)
  */
-
+#define VERBOSE
 #include <linux/gpio/consumer.h>
 #include <linux/module.h>
 #include <linux/of.h>
@@ -161,23 +161,33 @@ static int panel_lvds_parse_dt(struct panel_lvds *lvds)
 
 static int panel_lvds_probe(struct platform_device *pdev)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	struct panel_lvds *lvds;
 	int ret;
 
 	lvds = devm_kzalloc(&pdev->dev, sizeof(*lvds), GFP_KERNEL);
 	if (!lvds)
 		return -ENOMEM;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+#endif
 	lvds->dev = &pdev->dev;
 
 	ret = panel_lvds_parse_dt(lvds);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 3 ret=%d\n", __func__,ret);
+#endif
 	if (ret < 0)
 		return ret;
 
 	lvds->supply = devm_regulator_get_optional(lvds->dev, "power");
 	if (IS_ERR(lvds->supply)) {
 		ret = PTR_ERR(lvds->supply);
-
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 4 ret=%d\n", __func__,ret);
+#endif
 		if (ret != -ENODEV) {
 			if (ret != -EPROBE_DEFER)
 				dev_err(lvds->dev, "failed to request regulator: %d\n",
@@ -187,12 +197,17 @@ static int panel_lvds_probe(struct platform_device *pdev)
 
 		lvds->supply = NULL;
 	}
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
+#endif
 	/* Get GPIOs and backlight controller. */
 	lvds->enable_gpio = devm_gpiod_get_optional(lvds->dev, "enable",
 						     GPIOD_OUT_LOW);
 	if (IS_ERR(lvds->enable_gpio)) {
 		ret = PTR_ERR(lvds->enable_gpio);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 6 ret=%d\n", __func__,ret);
+#endif
 		dev_err(lvds->dev, "failed to request %s GPIO: %d\n",
 			"enable", ret);
 		return ret;
@@ -202,6 +217,9 @@ static int panel_lvds_probe(struct platform_device *pdev)
 						     GPIOD_OUT_HIGH);
 	if (IS_ERR(lvds->reset_gpio)) {
 		ret = PTR_ERR(lvds->reset_gpio);
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 7 ret=%d\n", __func__,ret);
+#endif
 		dev_err(lvds->dev, "failed to request %s GPIO: %d\n",
 			"reset", ret);
 		return ret;
@@ -219,12 +237,18 @@ static int panel_lvds_probe(struct platform_device *pdev)
 		       DRM_MODE_CONNECTOR_LVDS);
 
 	ret = drm_panel_of_backlight(&lvds->panel);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 8 ret=%d\n", __func__,ret);
+#endif
 	if (ret)
 		return ret;
 
 	drm_panel_add(&lvds->panel);
 
 	dev_set_drvdata(lvds->dev, lvds);
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 9\n", __func__);
+#endif
 	return 0;
 }
 

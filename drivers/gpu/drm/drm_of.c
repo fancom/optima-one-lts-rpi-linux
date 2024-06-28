@@ -1,3 +1,4 @@
+#define VERBOSE
 // SPDX-License-Identifier: GPL-2.0-only
 #include <linux/component.h>
 #include <linux/export.h>
@@ -117,32 +118,49 @@ int drm_of_component_probe(struct device *dev,
 	struct device_node *ep, *port, *remote;
 	struct component_match *match = NULL;
 	int i;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	if (!dev->of_node)
 		return -EINVAL;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+#endif
 	/*
 	 * Bind the crtc's ports first, so that drm_of_find_possible_crtcs()
 	 * called from encoder's .bind callbacks works as expected
 	 */
 	for (i = 0; ; i++) {
 		port = of_parse_phandle(dev->of_node, "ports", i);
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 3 port=%s, i=%d\n", __func__,port->name,i);
+#endif
 		if (!port)
 			break;
-
 		if (of_device_is_available(port->parent))
+		{
+#ifdef VERBOSE
+			printk(KERN_ERR "DSI_BRIDGE: %s: 4 port->parent=%s\n", __func__,port->parent->name);
+#endif
 			drm_of_component_match_add(dev, &match, compare_of,
 						   port);
+		}
 
 		of_node_put(port);
 	}
 
 	if (i == 0) {
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 5 i=0\n", __func__);
+#endif
 		dev_err(dev, "missing 'ports' property\n");
 		return -ENODEV;
 	}
 
 	if (!match) {
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 6\n", __func__);
+#endif
 		dev_err(dev, "no available port\n");
 		return -ENODEV;
 	}
@@ -152,10 +170,16 @@ int drm_of_component_probe(struct device *dev,
 	 */
 	for (i = 0; ; i++) {
 		port = of_parse_phandle(dev->of_node, "ports", i);
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 7 port=%s, i=%d\n", __func__,port->name,i);
+#endif
 		if (!port)
 			break;
 
 		if (!of_device_is_available(port->parent)) {
+#ifdef VERBOSE
+			printk(KERN_ERR "DSI_BRIDGE: %s: 8 port->parent=%s\n", __func__,port->parent->name);
+#endif
 			of_node_put(port);
 			continue;
 		}
@@ -163,11 +187,17 @@ int drm_of_component_probe(struct device *dev,
 		for_each_child_of_node(port, ep) {
 			remote = of_graph_get_remote_port_parent(ep);
 			if (!remote || !of_device_is_available(remote)) {
+#ifdef VERBOSE
+				printk(KERN_ERR "DSI_BRIDGE: %s: 9\n", __func__);
+#endif
 				of_node_put(remote);
 				continue;
 			} else if (!of_device_is_available(remote->parent)) {
 				dev_warn(dev, "parent device of %pOF is not available\n",
 					 remote);
+#ifdef VERBOSE
+				printk(KERN_ERR "DSI_BRIDGE: %s: 10\n", __func__);
+#endif
 				of_node_put(remote);
 				continue;
 			}
@@ -178,7 +208,9 @@ int drm_of_component_probe(struct device *dev,
 		}
 		of_node_put(port);
 	}
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 11\n", __func__);
+#endif
 	return component_master_add_with_match(dev, m_ops, match);
 }
 EXPORT_SYMBOL(drm_of_component_probe);
@@ -239,11 +271,19 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 				struct drm_panel **panel,
 				struct drm_bridge **bridge)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	int ret = -EPROBE_DEFER;
 	struct device_node *remote;
 
 	if (!panel && !bridge)
+	{
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+#endif
 		return -EINVAL;
+	}
 	if (panel)
 		*panel = NULL;
 
@@ -254,28 +294,52 @@ int drm_of_find_panel_or_bridge(const struct device_node *np,
 	 * device-tree node.
 	 */
 	if (!of_graph_is_present(np))
+	{
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+#endif
 		return -ENODEV;
+	}
 
 	remote = of_graph_get_remote_node(np, port, endpoint);
 	if (!remote)
 		return -ENODEV;
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 4\n", __func__);
+#endif
 
 	if (panel) {
 		*panel = of_drm_find_panel(remote);
 		if (!IS_ERR(*panel))
+		{
 			ret = 0;
+#ifdef VERBOSE
+			printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
+#endif
+               }
 		else
+		{
 			*panel = NULL;
+#ifdef VERBOSE
+			printk(KERN_ERR "DSI_BRIDGE: %s: 6\n", __func__);
+#endif
+		}
 	}
 
 	/* No panel found yet, check for a bridge next. */
 	if (bridge) {
 		if (ret) {
 			*bridge = of_drm_find_bridge(remote);
+#ifdef VERBOSE
+			printk(KERN_ERR "DSI_BRIDGE: %s: 7 ret=%d\n", __func__,ret);
+#endif
 			if (*bridge)
 				ret = 0;
 		} else {
 			*bridge = NULL;
+#ifdef VERBOSE
+			printk(KERN_ERR "DSI_BRIDGE: %s: 8 ret=%d\n", __func__,ret);
+#endif
 		}
 
 	}
