@@ -44,7 +44,6 @@
 	fragment@1 {
 		target = <&pwm>;
 		frag1: __overlay__ {
-			#pwm-cells = <2>;
 			pinctrl-names = "default";
 			pinctrl-0 = <&pwm_pins>;
 			assigned-clock-rates = <100000000>;
@@ -57,19 +56,17 @@
 		__overlay__ {
 			backlight_lvds: backlight {
 				compatible = "pwm-backlight";
-				pwms = <&pwm 0 5000000>; /* 200Hz */
+				pwms = <&pwm 0 5000000 0>; /* 200Hz */
 				brightness-levels = <0 1000>;
 				num-interpolated-steps = <1000>;
 				default-brightness-level = <800>;
 				enable-gpios = <&gpio 17 GPIO_ACTIVE_HIGH>;
 
 				power-supply = <&vdd_3v3_reg>;
-				status = "okay";
 			};
 
 			panel: panel {
 				compatible = "panel-lvds";
-				status = "okay";
 
 				backlight = <&backlight_lvds>;
 				power-supply = <&vdd_3v3_reg>;
