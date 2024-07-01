@@ -92,6 +92,8 @@
 				};
 
 				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
 					port@0 {
 						reg = <0>;
 						dual-lvds-odd-pixels;
@@ -120,18 +122,15 @@
 			#size-cells = <0>;
 			status = "okay";
 
-			pinctrl-names = "default";
-			pinctrl-0 = <&i2c1_pins>;
 			clock-frequency = <400000>;
 
-			sn65dsi84@2c {
+			bridge@2c {
 				compatible = "ti,sn65dsi84";
 				reg = <0x2c>;
 				enable-gpios = <&gpio 11 GPIO_ACTIVE_HIGH>;
 
 				pinctrl-names = "default";
 				pinctrl-0 = <&dsi_lvds_en>;
-				status = "okay";
 
 				interrupts = <36 IRQ_TYPE_LEVEL_HIGH>;
 
@@ -168,8 +167,6 @@
 	fragment@3 {
 		target = <&dsi1>;
 		__overlay__ {
-			#address-cells = <1>;
-			#size-cells = <0>;
 			status = "okay";
 			port {
 				dsi_out_port: endpoint {
