@@ -11,7 +11,7 @@
  * pipelines), the TFU (texture formatting unit), and the CSD (compute
  * shader dispatch).
  */
-
+#define VERBOSE
 #include <linux/clk.h>
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
@@ -200,6 +200,9 @@ MODULE_DEVICE_TABLE(of, v3d_of_match);
 static int
 map_regs(struct v3d_dev *v3d, void __iomem **regs, const char *name)
 {
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1  %s\n", __func__, name);
+#endif
 	*regs = devm_platform_ioremap_resource_byname(v3d_to_pdev(v3d), name);
 	return PTR_ERR_OR_ZERO(*regs);
 }
@@ -215,29 +218,41 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 	u32 mmu_debug;
 	u32 ident1;
 	u64 mask;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 	v3d = devm_drm_dev_alloc(dev, &v3d_drm_driver, struct v3d_dev, drm);
 	if (IS_ERR(v3d))
 		return PTR_ERR(v3d);
 
 	drm = &v3d->drm;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+#endif
 	platform_set_drvdata(pdev, drm);
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+#endif
 	ret = map_regs(v3d, &v3d->hub_regs, "hub");
 	if (ret)
 		return ret;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 4\n", __func__);
+#endif
 	ret = map_regs(v3d, &v3d->core_regs[0], "core0");
 	if (ret)
 		return ret;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
+#endif
 	mmu_debug = V3D_READ(V3D_MMU_DEBUG_INFO);
 	mask = DMA_BIT_MASK(30 + V3D_GET_FIELD(mmu_debug, V3D_MMU_PA_WIDTH));
 	ret = dma_set_mask_and_coherent(dev, mask);
 	if (ret)
 		return ret;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 6\n", __func__);
+#endif
 	v3d->va_width = 30 + V3D_GET_FIELD(mmu_debug, V3D_MMU_VA_WIDTH);
 
 	ident1 = V3D_READ(V3D_HUB_IDENT1);
@@ -245,7 +260,9 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 		    V3D_GET_FIELD(ident1, V3D_HUB_IDENT1_REV));
 	v3d->cores = V3D_GET_FIELD(ident1, V3D_HUB_IDENT1_NCORES);
 	WARN_ON(v3d->cores > 1); /* multicore not yet implemented */
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 7\n", __func__);
+#endif
 	v3d->reset = devm_reset_control_get_exclusive(dev, NULL);
 	if (IS_ERR(v3d->reset)) {
 		ret = PTR_ERR(v3d->reset);
@@ -261,7 +278,9 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 			return ret;
 		}
 	}
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 8\n", __func__);
+#endif
 	v3d->clk = devm_clk_get(dev, NULL);
 	if (IS_ERR_OR_NULL(v3d->clk)) {
 		if (PTR_ERR(v3d->clk) != -EPROBE_DEFER)
@@ -302,7 +321,9 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 		dev_err(dev, "Failed to allocate MMU scratch page\n");
 		return -ENOMEM;
 	}
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 9\n", __func__);
+#endif
 	ret = v3d_gem_init(drm);
 	if (ret)
 		goto dma_free;
@@ -314,7 +335,9 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 	ret = drm_dev_register(drm, 0);
 	if (ret)
 		goto irq_disable;
-
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 10\n", __func__);
+#endif
 	ret = clk_set_min_rate(v3d->clk, v3d->clk_down_rate);
 	WARN_ON_ONCE(ret != 0);
 
