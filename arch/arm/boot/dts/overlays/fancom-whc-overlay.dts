@@ -128,6 +128,19 @@
 			status = "disabled";
 		};
 	};
+
+	fragment@8 {
+		target = <&cpu_thermal>;
+		__overlay__ {
+			trips {
+				cpu-crit {
+					temperature	= <90000>;
+					hysteresis = <5000>;
+					type = "passive";
+				};
+			};
+		};
+	};
 };
 
 
