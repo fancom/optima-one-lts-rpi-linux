@@ -1,7 +1,7 @@
 //#define MODE_HACK
 #define VERBOSE
-//#define HARDCODED_REGS
-//#define SN65DSI83_TEST_PATTERN
+#define HARDCODED_REGS
+#define SN65DSI83_TEST_PATTERN
 
 // SPDX-License-Identifier: GPL-2.0
 /*
@@ -242,7 +242,7 @@ static const struct regmap_config sn65dsi83_regmap_config = {
 	.max_register = REG_IRQ_STAT,
 };
 
-static const struct reg_default sn65dsi65_reg_defaults[] = {
+static const struct reg_default sn65dsi83_reg_defaults[] = {
 	/* Reset */
 	{0x09, 0x00},
 
@@ -581,15 +581,15 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 
 #ifdef HARDCODED_REGS
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: sn65dsi65_reg_defaults\n", __func__);
+	printk(KERN_ERR "DSI_BRIDGE: %s: sn65dsi83_reg_defaults\n", __func__);
 #endif
 	int i;
-	for (i = 0; i < ARRAY_SIZE(sn65dsi65_reg_defaults); i++) {
-		struct reg_default conf = sn65dsi65_reg_defaults[i];
+	for (i = 0; i < ARRAY_SIZE(sn65dsi83_reg_defaults); i++) {
+		struct reg_default conf = sn65dsi83_reg_defaults[i];
 		regmap_write(ctx->regmap, conf.reg, conf.def);
 	}
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: written %d sn65dsi65_reg_defaults\n",
+	printk(KERN_ERR "DSI_BRIDGE: %s: written %d sn65dsi83_reg_defaults\n",
 	       __func__, i);
 #endif
 #endif
@@ -605,6 +605,9 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 		/* On failure, disable PLL again and exit. */
 		regmap_write(ctx->regmap, REG_RC_PLL_EN, 0x00);
 		regulator_disable(ctx->vcc);
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 15\n", __func__);
+#endif
 		return;
 	}
 
@@ -613,6 +616,10 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 
 	/* Wait for 10ms after soft reset as specified in datasheet */
 	usleep_range(10000, 12000);
+
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 16\n", __func__);
+#endif
 }
 
 static void sn65dsi83_atomic_enable(struct drm_bridge *bridge,
@@ -630,6 +637,10 @@ static void sn65dsi83_atomic_enable(struct drm_bridge *bridge,
 	regmap_read(ctx->regmap, REG_IRQ_STAT, &pval);
 	if (pval)
 		dev_err(ctx->dev, "Unexpected link status 0x%02x\n", pval);
+
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 }
 
 static void sn65dsi83_atomic_disable(struct drm_bridge *bridge,
@@ -647,6 +658,10 @@ static void sn65dsi83_atomic_disable(struct drm_bridge *bridge,
 		dev_err(ctx->dev, "Failed to disable vcc: %d\n", ret);
 
 	regcache_mark_dirty(ctx->regmap);
+
+#ifdef VERBOSE
+		printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+#endif
 }
 
 static enum drm_mode_status
@@ -807,7 +822,7 @@ static int sn65dsi83_host_attach(struct sn65dsi83 *ctx)
 static int sn65dsi83_probe(struct i2c_client *client)
 {
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 1 6\n", __func__);
+	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
 #endif
 	const struct i2c_device_id *id = i2c_client_get_device_id(client);
 	struct device *dev = &client->dev;
@@ -874,9 +889,15 @@ static int sn65dsi83_probe(struct i2c_client *client)
 		goto err_remove_bridge;
 	}
 
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 8\n", __func__);
+#endif
 	return 0;
 
 err_remove_bridge:
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 9\n", __func__);
+#endif
 	drm_bridge_remove(&ctx->bridge);
 	return ret;
 }
