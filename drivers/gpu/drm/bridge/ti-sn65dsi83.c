@@ -1,7 +1,6 @@
-//#define MODE_HACK
 #define VERBOSE
-//#define HARDCODED_REGS
-//#define SN65DSI83_TEST_PATTERN
+#define HARDCODED_REGS
+#define SN65DSI83_TEST_PATTERN
 
 // SPDX-License-Identifier: GPL-2.0
 /*
@@ -309,6 +308,21 @@ static const struct reg_default sn65dsi83_reg_defaults[] = {
 #endif
 };
 
+#ifdef VERBOSE
+static void dumpRegs(struct drm_bridge *bridge)
+{
+	struct sn65dsi83 *ctx = bridge_to_sn65dsi83(bridge);
+	unsigned int val;
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(sn65dsi83_reg_defaults); i++) {
+		struct reg_default conf = sn65dsi83_reg_defaults[i];
+		regmap_read(ctx->regmap, conf.reg, &val);
+		printk(KERN_ERR "DSI_BRIDGE: %s: reg 0x%02x val 0x%02x\n", __func__, conf.reg, val);
+	}
+}
+#endif
+
 static struct sn65dsi83 *bridge_to_sn65dsi83(struct drm_bridge *bridge)
 {
 	return container_of(bridge, struct sn65dsi83, bridge);
@@ -613,6 +627,10 @@ static void sn65dsi83_atomic_pre_enable(struct drm_bridge *bridge,
 
 	/* Wait for 10ms after soft reset as specified in datasheet */
 	usleep_range(10000, 12000);
+
+#ifdef VERBOSE
+	dumpRegs(&ctx->bridge);
+#endif
 }
 
 static void sn65dsi83_atomic_enable(struct drm_bridge *bridge,
@@ -881,6 +899,13 @@ static int sn65dsi83_probe(struct i2c_client *client)
 		goto err_remove_bridge;
 	}
 
+
+#ifdef VERBOSE
+	dumpRegs(&ctx->bridge);
+#endif
+#ifdef VERBOSE
+	printk(KERN_ERR "DSI_BRIDGE: %s: 8\n", __func__);
+#endif
 	return 0;
 
 err_remove_bridge:
