@@ -40,6 +40,7 @@
 		__overlay__ {
 			panel: panel {
 				compatible = "panel-lvds";
+				status = "okay";
 
 				power-supply = <&vdd_3v3_reg>;
 
@@ -118,6 +119,7 @@
 
 				pinctrl-names = "default";
 				pinctrl-0 = <&dsi_lvds_en>;
+				status = "okay";
 
 				interrupts = <36 IRQ_TYPE_LEVEL_HIGH>;
 
