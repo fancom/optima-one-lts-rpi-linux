@@ -162,7 +162,7 @@ static int panel_lvds_parse_dt(struct panel_lvds *lvds)
 static int panel_lvds_probe(struct platform_device *pdev)
 {
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+	printk(KERN_ERR "PANEL_LVDS: %s: 1\n", __func__);
 #endif
 	struct panel_lvds *lvds;
 	int ret;
@@ -171,13 +171,13 @@ static int panel_lvds_probe(struct platform_device *pdev)
 	if (!lvds)
 		return -ENOMEM;
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+	printk(KERN_ERR "PANEL_LVDS: %s: 2\n", __func__);
 #endif
 	lvds->dev = &pdev->dev;
 
 	ret = panel_lvds_parse_dt(lvds);
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 3 ret=%d\n", __func__,ret);
+	printk(KERN_ERR "PANEL_LVDS: %s: 3 ret=%d\n", __func__,ret);
 #endif
 	if (ret < 0)
 		return ret;
@@ -186,7 +186,7 @@ static int panel_lvds_probe(struct platform_device *pdev)
 	if (IS_ERR(lvds->supply)) {
 		ret = PTR_ERR(lvds->supply);
 #ifdef VERBOSE
-		printk(KERN_ERR "DSI_BRIDGE: %s: 4 ret=%d\n", __func__,ret);
+		printk(KERN_ERR "PANEL_LVDS: %s: 4 ret=%d\n", __func__,ret);
 #endif
 		if (ret != -ENODEV) {
 			if (ret != -EPROBE_DEFER)
@@ -198,7 +198,7 @@ static int panel_lvds_probe(struct platform_device *pdev)
 		lvds->supply = NULL;
 	}
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
+	printk(KERN_ERR "PANEL_LVDS: %s: 5\n", __func__);
 #endif
 	/* Get GPIOs and backlight controller. */
 	lvds->enable_gpio = devm_gpiod_get_optional(lvds->dev, "enable",
@@ -206,7 +206,7 @@ static int panel_lvds_probe(struct platform_device *pdev)
 	if (IS_ERR(lvds->enable_gpio)) {
 		ret = PTR_ERR(lvds->enable_gpio);
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 6 ret=%d\n", __func__,ret);
+	printk(KERN_ERR "PANEL_LVDS: %s: 6 ret=%d\n", __func__,ret);
 #endif
 		dev_err(lvds->dev, "failed to request %s GPIO: %d\n",
 			"enable", ret);
@@ -218,7 +218,7 @@ static int panel_lvds_probe(struct platform_device *pdev)
 	if (IS_ERR(lvds->reset_gpio)) {
 		ret = PTR_ERR(lvds->reset_gpio);
 #ifdef VERBOSE
-		printk(KERN_ERR "DSI_BRIDGE: %s: 7 ret=%d\n", __func__,ret);
+		printk(KERN_ERR "PANEL_LVDS: %s: 7 ret=%d\n", __func__,ret);
 #endif
 		dev_err(lvds->dev, "failed to request %s GPIO: %d\n",
 			"reset", ret);
@@ -238,7 +238,7 @@ static int panel_lvds_probe(struct platform_device *pdev)
 
 	ret = drm_panel_of_backlight(&lvds->panel);
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 8 ret=%d\n", __func__,ret);
+	printk(KERN_ERR "PANEL_LVDS: %s: 8 ret=%d\n", __func__,ret);
 #endif
 	if (ret)
 		return ret;
@@ -247,7 +247,7 @@ static int panel_lvds_probe(struct platform_device *pdev)
 
 	dev_set_drvdata(lvds->dev, lvds);
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 9\n", __func__);
+	printk(KERN_ERR "PANEL_LVDS: %s: 9\n", __func__);
 #endif
 	return 0;
 }

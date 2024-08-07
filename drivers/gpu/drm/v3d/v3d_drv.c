@@ -201,7 +201,7 @@ static int
 map_regs(struct v3d_dev *v3d, void __iomem **regs, const char *name)
 {
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 1  %s\n", __func__, name);
+	printk(KERN_ERR "V3D: %s: 1  %s\n", __func__, name);
 #endif
 	*regs = devm_platform_ioremap_resource_byname(v3d_to_pdev(v3d), name);
 	return PTR_ERR_OR_ZERO(*regs);
@@ -219,7 +219,7 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 	u32 ident1;
 	u64 mask;
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+	printk(KERN_ERR "V3D: %s: 1\n", __func__);
 #endif
 	v3d = devm_drm_dev_alloc(dev, &v3d_drm_driver, struct v3d_dev, drm);
 	if (IS_ERR(v3d))
@@ -227,23 +227,23 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 
 	drm = &v3d->drm;
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 2\n", __func__);
+	printk(KERN_ERR "V3D: %s: 2\n", __func__);
 #endif
 	platform_set_drvdata(pdev, drm);
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+	printk(KERN_ERR "V3D: %s: 3\n", __func__);
 #endif
 	ret = map_regs(v3d, &v3d->hub_regs, "hub");
 	if (ret)
 		return ret;
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 4\n", __func__);
+	printk(KERN_ERR "V3D: %s: 4\n", __func__);
 #endif
 	ret = map_regs(v3d, &v3d->core_regs[0], "core0");
 	if (ret)
 		return ret;
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 5\n", __func__);
+	printk(KERN_ERR "V3D: %s: 5\n", __func__);
 #endif
 	mmu_debug = V3D_READ(V3D_MMU_DEBUG_INFO);
 	mask = DMA_BIT_MASK(30 + V3D_GET_FIELD(mmu_debug, V3D_MMU_PA_WIDTH));
@@ -251,7 +251,7 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 6\n", __func__);
+	printk(KERN_ERR "V3D: %s: 6\n", __func__);
 #endif
 	v3d->va_width = 30 + V3D_GET_FIELD(mmu_debug, V3D_MMU_VA_WIDTH);
 
@@ -261,7 +261,7 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 	v3d->cores = V3D_GET_FIELD(ident1, V3D_HUB_IDENT1_NCORES);
 	WARN_ON(v3d->cores > 1); /* multicore not yet implemented */
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 7\n", __func__);
+	printk(KERN_ERR "V3D: %s: 7\n", __func__);
 #endif
 	v3d->reset = devm_reset_control_get_exclusive(dev, NULL);
 	if (IS_ERR(v3d->reset)) {
@@ -279,7 +279,7 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 		}
 	}
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 8\n", __func__);
+	printk(KERN_ERR "V3D: %s: 8\n", __func__);
 #endif
 	v3d->clk = devm_clk_get(dev, NULL);
 	if (IS_ERR_OR_NULL(v3d->clk)) {
@@ -322,7 +322,7 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 9\n", __func__);
+	printk(KERN_ERR "V3D: %s: 9\n", __func__);
 #endif
 	ret = v3d_gem_init(drm);
 	if (ret)
@@ -336,7 +336,7 @@ static int v3d_platform_drm_probe(struct platform_device *pdev)
 	if (ret)
 		goto irq_disable;
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 10\n", __func__);
+	printk(KERN_ERR "V3D: %s: 10\n", __func__);
 #endif
 	ret = clk_set_min_rate(v3d->clk, v3d->clk_down_rate);
 	WARN_ON_ONCE(ret != 0);
