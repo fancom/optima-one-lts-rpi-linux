@@ -504,7 +504,7 @@ struct drm_bridge *devm_drm_of_get_bridge(struct device *dev,
 					  u32 port, u32 endpoint)
 {
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 1\n", __func__);
+	printk(KERN_ERR "PANEL: %s: 1\n", __func__);
 #endif
 	struct drm_bridge *bridge;
 	struct drm_panel *panel;
@@ -513,7 +513,7 @@ struct drm_bridge *devm_drm_of_get_bridge(struct device *dev,
 	ret = drm_of_find_panel_or_bridge(np, port, endpoint,
 					  &panel, &bridge);
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 2 ret=%d\n", __func__,ret);
+	printk(KERN_ERR "PANEL: %s: 2 ret=%d\n", __func__,ret);
 #endif
 	if (ret)
 		return ERR_PTR(ret);
@@ -521,7 +521,7 @@ struct drm_bridge *devm_drm_of_get_bridge(struct device *dev,
 	if (panel)
 		bridge = devm_drm_panel_bridge_add(dev, panel);
 #ifdef VERBOSE
-	printk(KERN_ERR "DSI_BRIDGE: %s: 3\n", __func__);
+	printk(KERN_ERR "PANEL: %s: 3\n", __func__);
 #endif
 	return bridge;
 }
