@@ -38,21 +38,9 @@
 	fragment@1 {
 		target-path = "/";
 		__overlay__ {
-			backlight_lvds: backlight {
-				compatible = "pwm-backlight";
-				pwms = <&pwm 0 2500000 0>; /* 200Hz */
-				brightness-levels = <0 1000>;
-				num-interpolated-steps = <1000>;
-				default-brightness-level = <800>;
-				enable-gpios = <&gpio 17 GPIO_ACTIVE_HIGH>;
-
-				power-supply = <&vdd_3v3_reg>;
-			};
-
 			panel: panel {
 				compatible = "panel-lvds";
 
-				backlight = <&backlight_lvds>;
 				power-supply = <&vdd_3v3_reg>;
 
 				width-mm = <344>;
