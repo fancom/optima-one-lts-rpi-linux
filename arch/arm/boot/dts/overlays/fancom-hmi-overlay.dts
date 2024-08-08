@@ -83,11 +83,20 @@
 					/* since we use dual LVDS channel, the clock frequency is 2*70.93Mhz */
 					/* the bridge driver will correct this */
 					/* vc4_dsi.c: however, the dsi parent_rate is 3Ghz and the dsi-divider is fixed to (24/#nr-data lanes) */
-					/* (3Ghz / 3)/7 = 142.86Mhz. (142.86Mhz * 24bpp) / 8 = 571Mhz DSI clock */
-					/* (3Ghz / 4)/7 = 107.14Mhz. (107.14Mhz * 24bpp) / 8 = 428.57Mhz DSI clock */
 					/* minimum required DSI clock is (48bits/(3 lanes * 2)) * 60Mhz = 480Mhz
-					/* we'll hence need a 571Mhz capped to 500Mhz DSI clock, with a divider of 8 in the bridge, resulting in 62.5Mhz */
+					/* nr-datalanes must be >=3 (on 2 lanes, we're exceeding the physical limit of the DSI bridge clock input)
+					/* the 4th datalane on the rPI CM4 isn't functioning */
+					/* The goal is to select a divider inside vc4_dsi (vc4_dsi_bridge_mode_fixup) that brings us > 480Mhz and <= 500Mhz
+					/* (3Ghz / divider)/(24bpp/nr-datalanes) = x Mhz. (x Mhz * 24bpp) / (2*nr-datalanes) = y Mhz DSI clock */
+					/* (3Ghz / 1)/8 = 375Mhz. (375Mhz * 24bpp) / 6 = 1.5Ghz DSI clock */
+					/* (3Ghz / 2)/8 = 187.5Mhz. (187.5Mhz * 24bpp) / 6 = 750Mhz DSI clock */
+					/* (3Ghz / 3)/8 = 125Mhz. (125Mhz * 24bpp) / 6 = 500Mhz DSI clock */
+					/* (3Ghz / 4)/8 = 93.75Mhz. (93.75Mhz * 24bpp) / 6 = 375Mhz DSI clock */
+					
+					/* we'll hence need a to achieve a divider of 3 in the vc4_dsi, with a divider of 8 in the bridge, resulting in 62.5Mhz */
 					/* 62.5Mhz * 2 = 125Mhz */
+					/* A clock-frequency here is used in the vc4_dsi.c (vc4_dsi_bridge_mode_fixup) to determine that divider */
+
 					clock-frequency = <125000000>;
 
 					/* the hactive and porches in the datasheet are for a single LVDS channel */
