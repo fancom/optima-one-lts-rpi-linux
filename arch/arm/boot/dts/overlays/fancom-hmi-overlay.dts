@@ -102,9 +102,9 @@
 					/* the hactive and porches in the datasheet are for a single LVDS channel */
 					/* since we use dual LVDS channel, double everything */
 					hactive = <1920>;
-					hsync-len = <30>;
-					hfront-porch = <30>;
-					hback-porch = <30>;
+					hsync-len = <60>;
+					hfront-porch = <60>;
+					hback-porch = <60>;
 
 					vactive = <1080>;
 					vsync-len = <4>;
